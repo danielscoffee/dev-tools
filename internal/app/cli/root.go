@@ -1,27 +1,19 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cli
 
 import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type CLI struct{}
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "dev-tools",
 	Short: "Compilation of tools that give a AWESOME developer experience",
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func (c CLI) Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -30,13 +22,23 @@ func (c CLI) Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// cobra.OnInitialize(initConfig)
+}
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dev-tools.yaml)")
+// BUG: This is temporary configInit
+func initConfig() {
+	cfgFile := ".dev-tools.yaml"
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
+		newFile, err := os.Create(cfgFile)
+		if err != nil {
+			panic(err)
+		}
+		defer newFile.Close()
+	}
+
+	viper.AutomaticEnv()
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
 }
