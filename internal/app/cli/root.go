@@ -3,8 +3,8 @@ package cli
 import (
 	"os"
 
+	"github.com/danielscoffee/dev-tools/internal/pkg/configfile"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type CLI struct{}
@@ -22,23 +22,6 @@ func (c CLI) Execute() {
 }
 
 func init() {
-	// cobra.OnInitialize(initConfig)
-}
-
-// BUG: This is temporary configInit
-func initConfig() {
-	cfgFile := ".dev-tools.yaml"
-
-	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		newFile, err := os.Create(cfgFile)
-		if err != nil {
-			panic(err)
-		}
-		defer newFile.Close()
-	}
-
-	viper.AutomaticEnv()
-	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
-	}
+	cf := &configfile.ConfigFile{}
+	cobra.OnInitialize(cf.InitConfig)
 }

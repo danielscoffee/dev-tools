@@ -28,9 +28,8 @@ validate-pages:
 generate-cli:
 	@echo "Generating CLI structure in ../cli..."
 	@mkdir -p ./../cli
-	@cobra-cli init --pkg-name github.com/yourusername/dev-tools ./../cli
+	@cobra-cli init --pkg-name github.com/danielscoffee/dev-tools ./../cli
 
-# TUI related targets
 .PHONY: tui tui-test tui-run
 tui: build
 	@echo "🚀 Starting Dev Tools TUI..."
