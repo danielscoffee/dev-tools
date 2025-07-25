@@ -2,40 +2,49 @@ package tui
 
 import (
 	"fmt"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/danielscoffee/dev-tools/internal/app/tui/pages"
+	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/config"
+	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/help"
+	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/home"
+	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/langs"
+	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/langs/golang"
 )
 
 // Model represents the main TUI application model
 type Model struct {
-	integration *pages.TUIIntegration
-	ready       bool
-	width       int
-	height      int
-	styles      *AppStyles
+	router *Router
+	ready  bool
+	width  int
+	height int
+	styles *AppStyles
 }
 
 // AppStyles defines the main application styles
 type AppStyles struct {
-	App       lipgloss.Style
-	Header    lipgloss.Style
-	Content   lipgloss.Style
-	Footer    lipgloss.Style
-	StatusBar lipgloss.Style
+	App lipgloss.Style
 }
 
 // NewModel creates a new TUI model
 func NewModel() *Model {
-	// Initialize pages system
-	pages.InitPages()
+	router := NewRouter()
+
+	// Register all routes with their page components
+	router.RegisterRoute("/", home.NewPage(), "Dev Tools - Home", "Main menu and navigation", "h")
+	router.RegisterRoute("/langs", langs.NewPage(), "Programming Languages", "Tools for different languages", "l")
+	router.RegisterRoute("/langs/golang", golang.NewPage(), "Go/Golang Tools", "Go development tools", "g")
+	router.RegisterRoute("/config", config.NewPage(), "Configuration", "Application settings", "c")
+	router.RegisterRoute("/help", help.NewPage(), "Help & Documentation", "Usage instructions and help", "?")
+
+	// TODO: Add more language routes
+	// router.RegisterRoute("/langs/javascript", javascript.NewPage(), "JavaScript Tools", "JavaScript development tools", "j")
+	// router.RegisterRoute("/langs/python", python.NewPage(), "Python Tools", "Python development tools", "p")
 
 	return &Model{
-		integration: pages.NewTUIIntegration(),
-		styles:      NewAppStyles(),
+		router: router,
+		styles: NewAppStyles(),
 	}
 }
 
@@ -44,30 +53,6 @@ func NewAppStyles() *AppStyles {
 	return &AppStyles{
 		App: lipgloss.NewStyle().
 			Padding(1, 2),
-
-		Header: lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FAFAFA")).
-			Background(lipgloss.Color("#7D56F4")).
-			Padding(0, 1).
-			MarginBottom(1),
-
-		Content: lipgloss.NewStyle().
-			Padding(1, 0).
-			Height(20),
-
-		Footer: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#626262")).
-			BorderTop(true).
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color("#383838")).
-			MarginTop(1).
-			Padding(1, 0),
-
-		StatusBar: lipgloss.NewStyle().
-			Background(lipgloss.Color("#00D7FF")).
-			Foreground(lipgloss.Color("#000000")).
-			Padding(0, 1),
 	}
 }
 
@@ -86,8 +71,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		// Let the integration handle input
-		if cont, cmd := m.integration.HandleInput(msg); !cont {
+		// Let the router handle input
+		if cont, cmd := m.router.HandleInput(msg); !cont {
 			return m, cmd
 		}
 		return m, nil
@@ -103,91 +88,27 @@ func (m *Model) View() string {
 	}
 
 	// Header
-	header := m.renderHeader()
+	header := m.router.RenderHeader(m.width)
 
 	// Main content
-	content := m.integration.RenderCurrentPage()
+	content := m.router.RenderCurrentPage(m.width, m.height)
 
 	// Footer
-	footer := m.renderFooter()
+	footer := m.router.RenderFooter(m.width)
 
 	// Status bar
-	status := m.renderStatusBar()
+	status := m.router.RenderStatusBar(m.width)
 
 	// Combine all sections
 	app := lipgloss.JoinVertical(
 		lipgloss.Left,
 		header,
-		m.styles.Content.Render(content),
+		m.router.styles.Content.Render(content),
 		footer,
 		status,
 	)
 
 	return m.styles.App.Render(app)
-}
-
-// renderHeader renders the application header
-func (m *Model) renderHeader() string {
-	title := "🛠️  Dev Tools TUI"
-	version := "v1.0.0"
-	subtitle := "Developer Experience Enhancement Suite"
-
-	headerTitle := lipgloss.JoinHorizontal(
-		lipgloss.Left,
-		title,
-		strings.Repeat(" ", max(0, m.width-len(title)-len(version)-8)),
-		version,
-	)
-
-	headerContent := lipgloss.JoinVertical(
-		lipgloss.Left,
-		headerTitle,
-		m.styles.Header.
-			Bold(false).
-			Foreground(lipgloss.Color("#CCCCCC")).
-			Render(subtitle),
-	)
-
-	return m.styles.Header.Width(m.width - 4).Render(headerContent)
-}
-
-// renderFooter renders the application footer
-func (m *Model) renderFooter() string {
-	return m.styles.Footer.Width(m.width - 4).Render(m.integration.GetFooter())
-}
-
-// renderStatusBar renders the status bar
-func (m *Model) renderStatusBar() string {
-	breadcrumb := m.getBreadcrumbString()
-
-	statusContent := fmt.Sprintf("📍 %s", breadcrumb)
-
-	return m.styles.StatusBar.Width(m.width - 4).Render(statusContent)
-}
-
-// getBreadcrumbString returns the breadcrumb as a string
-func (m *Model) getBreadcrumbString() string {
-	manager := pages.GetManager()
-	breadcrumb := manager.GetBreadcrumb()
-
-	if len(breadcrumb) == 0 {
-		return "home"
-	}
-
-	var parts []string
-	for _, page := range breadcrumb {
-		parts = append(parts, page.Name)
-	}
-
-	return strings.Join(parts, " > ")
-}
-
-// max returns the maximum of two integers
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
 }
 
 // Initialize starts the TUI application

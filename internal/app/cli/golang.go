@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// golangCmd represents the golang command
 var golangCmd = &cobra.Command{
 	Use:   "golang",
 	Short: "A brief description of your command",
@@ -15,6 +14,15 @@ var golangCmd = &cobra.Command{
 	},
 }
 
+var buildCmd = &cobra.Command{
+	Use:   "build golang project",
+	Short: "Builds a Golang project",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Building Golang project...")
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(golangCmd)
+	golangCmd.AddCommand(buildCmd)
 }

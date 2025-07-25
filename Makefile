@@ -45,3 +45,10 @@ tui-run: build tui
 demo: build
 	@echo "📱 Running TUI demo (press Ctrl+C to exit)..."
 	@timeout 30 ./bin/dev-tools tui || echo "Demo finished"
+
+router-demo:
+	@echo "🔀 Testing Router System..."
+	@go run examples/router_demo.go
+
+router-test: router-demo
+	@echo "✅ Router system test complete"
