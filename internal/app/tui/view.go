@@ -11,6 +11,7 @@ import (
 	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/home"
 	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/langs"
 	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/langs/golang"
+	"github.com/danielscoffee/dev-tools/internal/app/tui/pages/langs/golang/blueprint"
 )
 
 // Model represents the main TUI application model
@@ -35,6 +36,7 @@ func NewModel() *Model {
 	router.RegisterRoute("/", home.NewPage(), "Dev Tools - Home", "Main menu and navigation", "h")
 	router.RegisterRoute("/langs", langs.NewPage(), "Programming Languages", "Tools for different languages", "l")
 	router.RegisterRoute("/langs/golang", golang.NewPage(), "Go/Golang Tools", "Go development tools", "g")
+	router.RegisterRoute("/langs/golang/blueprint", blueprint.NewPage(), "Go Blueprint Creator", "Create Go projects with go-blueprint", "b")
 	router.RegisterRoute("/config", config.NewPage(), "Configuration", "Application settings", "c")
 	router.RegisterRoute("/help", help.NewPage(), "Help & Documentation", "Usage instructions and help", "?")
 
@@ -76,6 +78,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 		return m, nil
+	
+	default:
+		// Handle blueprint-specific messages
+		currentRoute := m.router.GetCurrentRoute()
+		if currentRoute != nil && currentRoute.Path == "/langs/golang/blueprint" {
+			if blueprintPage, ok := currentRoute.Component.(*blueprint.Page); ok {
+				return m, blueprintPage.Update(msg)
+			}
+		}
 	}
 
 	return m, nil

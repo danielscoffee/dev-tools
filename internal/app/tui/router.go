@@ -145,8 +145,10 @@ func (r *Router) HandleInput(msg tea.KeyMsg) (bool, tea.Cmd) {
 		return true, nil
 	}
 
-	// Check for route-specific key bindings
-	for path, route := range r.routes {
+	// Check for contextually relevant route key bindings
+	// Only check routes that are accessible from the current context
+	availableRoutes := r.getAvailableRoutes()
+	for path, route := range availableRoutes {
 		if route.KeyBinding == msg.String() {
 			r.NavigateTo(path)
 			return true, nil
@@ -159,6 +161,40 @@ func (r *Router) HandleInput(msg tea.KeyMsg) (bool, tea.Cmd) {
 	}
 
 	return true, nil
+}
+
+// getAvailableRoutes returns routes that are accessible from the current route
+func (r *Router) getAvailableRoutes() map[string]*Route {
+	available := make(map[string]*Route)
+	
+	switch r.currentRoute {
+	case "/":
+		// From home, can access top-level routes
+		for path, route := range r.routes {
+			if path == "/langs" || path == "/config" || path == "/help" {
+				available[path] = route
+			}
+		}
+	case "/langs":
+		// From languages, can access language-specific routes
+		for path, route := range r.routes {
+			if strings.HasPrefix(path, "/langs/") && strings.Count(path, "/") == 2 {
+				available[path] = route
+			}
+		}
+	case "/langs/golang":
+		// From golang, can access golang-specific routes
+		for path, route := range r.routes {
+			if strings.HasPrefix(path, "/langs/golang/") && strings.Count(path, "/") == 3 {
+				available[path] = route
+			}
+		}
+	default:
+		// For other routes, no child routes are directly accessible via key bindings
+		// They need to use escape to go back or handle their own navigation
+	}
+	
+	return available
 }
 
 // RenderCurrentPage renders the current page

@@ -112,20 +112,7 @@ func (p *Page) Render(width, height int) string {
 
 // HandleInput handles input for the golang page
 func (p *Page) HandleInput(msg tea.KeyMsg) (bool, tea.Cmd) {
-	switch msg.String() {
-	case "b":
-		// TODO: Implement blueprint creation
-		return true, nil
-	case "m":
-		// TODO: Implement module management
-		return true, nil
-	case "t":
-		// TODO: Implement test runner
-		return true, nil
-	case "f":
-		// TODO: Implement code formatter
-		return true, nil
-	}
+	// Let the router handle navigation for blueprint and other actions
 	return true, nil
 }
 
@@ -137,7 +124,7 @@ func (p *Page) GetTitle() string {
 // GetKeyBindings returns the key bindings for this page
 func (p *Page) GetKeyBindings() []types.KeyBinding {
 	return []types.KeyBinding{
-		{Key: "b", Description: "Blueprint", Action: "create_blueprint"},
+		{Key: "b", Description: "Blueprint", Action: "navigate_blueprint"},
 		{Key: "m", Description: "Modules", Action: "manage_modules"},
 		{Key: "t", Description: "Tests", Action: "run_tests"},
 		{Key: "f", Description: "Format", Action: "format_code"},
