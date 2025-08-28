@@ -52,3 +52,19 @@ router-demo:
 
 router-test: router-demo
 	@echo "✅ Router system test complete"
+
+# Code maintenance commands
+clean-comments:
+	@echo "🧹 Removing comments from codebase..."
+	@./scripts/clean-comments.sh .
+	@echo "✅ Comments cleaned (backups created with .bak extension)"
+
+clean-comments-go:
+	@echo "🧹 Removing comments using Go parser..."
+	@go run cmd/clean-comments/main.go .
+	@echo "✅ Comments cleaned with Go parser"
+
+restore-comments:
+	@echo "🔄 Restoring comments from backups..."
+	@find . -name "*.bak" -exec sh -c 'mv "$$1" "$${1%.bak}"' _ {} \;
+	@echo "✅ Comments restored from .bak files"
